@@ -1,10 +1,10 @@
 const express = require('express');
 const cors = require('cors');
 const sqlite3 = require('sqlite3').verbose();
-const app = express();
 
-app.use(cors());
+const app = express();
 app.use(express.json()); // Parse JSON request bodies
+app.use(cors());
 
 // SQLite database setup
 const dbPath = './characters.db'; // Specify the path to your SQLite database file
@@ -32,13 +32,13 @@ db.serialize(() => {
 // Character creation endpoint
 app.post('/api/characters', (req, res) => {
   // Extract character data from request body
-  const { name, characterClass, level, race } = req.body;
+  const { name, characterClass, level, race, imgURL } = req.body;
 
   // Insert character data into the characters table
   db.run(`
     INSERT INTO characters (name, class, level, race)
     VALUES (?, ?, ?, ?)
-  `, [name, characterClass, level, race], function(err) {
+  `, [name, characterClass, level, race, imgURL], function(err) {
     if (err) {
       console.error(err.message);
       res.status(500).send('Failed to create character');
@@ -69,6 +69,19 @@ app.get('/api/characters/:id', (req, res) => {
     }
   });
 });
+
+app.get('/api/characters', (req, res) => {
+  const sql = 'SELECT * FROM characters';
+  db.all(sql, [], (err, rows) => {
+    if (err) {
+      console.error(err.message);
+      res.status(500).send('Server error');
+      return;
+    }
+    res.json(rows);
+  });
+});
+
 
 const port = 4000;
 app.listen(port, () => {
